@@ -15,7 +15,7 @@ public class EmailServiceImpl implements EmailService {
     private JavaMailSender javaMailSender;
 
     //d email htl ko message lr mhr
-
+    //hello
     @Value("${spring.mail.username}")
     private String senderEmail;
 
