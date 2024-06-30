@@ -1,13 +1,36 @@
 package com.example.bankingapplication.utils;
 
+import com.example.bankingapplication.dao.UserDao;
+import com.example.bankingapplication.dto.CreditDebitRequest;
+import com.example.bankingapplication.service.impl.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.time.Year;
 
 public class AccountUtils {
+
+    private UserService userService;
+
     public static final String ACCOUNT_EXISTS_CODE = "001";
     public static final String ACCOUNT_EXISTS_MESSAGE = "This user already has an account";
 
     public static final String ACCOUNT_CREATION_SUCCESS = "002";
     public static final String ACCOUNT_CREATION_MESSAGE = "Account has been successfully created";
+
+    public static final String ACCOUNT_NOT_EXIST_CODE = "003";
+    public static final String ACCOUNT_NOT_EXISTS_MESSAGE = "Account is not exists";
+
+    public static final String ACCOUNT_FOUND_CODE = "004";
+    public static final String ACCOUNT_FOUND_MESSAGE = "Account is found";
+
+    public static  final String TRANSACTION_SUCCESS_CODE = "005";
+    public static final String TRANSACTION_SUCCESS_MESSAGE = "Your balance is now %s";
+
+    public static final String INSUFFICIENT_BALANCE_CODE = "006";
+    public static  final String INSUFFICIENT_BALANCE_MESSAGE = "Insufficient balance";
+
+    public static final String ACCOUNT_DEBITED_SUCCESS = "007";
+    public static final String ACCOUNT_DEBITED_MESSAGE = "Account has been successfully debited";
 
     public static String generateAccountNumber(){
 
