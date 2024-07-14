@@ -19,6 +19,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private TransactionService transactionService;
+
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
 
@@ -123,6 +126,16 @@ public class UserServiceImpl implements UserService {
                 //need to save first to db to get latest updated balance
                 userDao.save(userToCredit);
 
+            //Save Transaction
+            TransactionDto transactionDto = TransactionDto.builder()
+                    .accountNumber(userToCredit.getAccountNumber())
+                    .transactionType("Credit")
+                    .accountNumber(userToCredit.getAccountNumber())
+                    .amount(creditDebitRequest.getAmount())
+                    .build();
+
+            transactionService.saveTransaction(transactionDto);
+
                 return BankResponse.builder()
                         .responseCode(AccountUtils.TRANSACTION_SUCCESS_CODE)
                         .responseMessage(String.format(AccountUtils.TRANSACTION_SUCCESS_MESSAGE, userToCredit.getAccountBalance()))
@@ -174,7 +187,80 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public BankResponse transfer(TransferRequest transferRequest) {
+        //get the account to debit(check if it exists)
+        //check if the amount that debiting is not more than current balance
+        //debit account
+        //get the account to credit
+        //credit the account
+        boolean isDestinationAccountExist = userDao.existsByAccountNumber(transferRequest.getDestinationAccountNumber());
+        if(!isDestinationAccountExist){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE)
+                    .build();
+        }
+      User sourceAccountUser = userDao.findByAccountNumber(transferRequest.getSourceAccountNumber());
+        String sourceUserName = sourceAccountUser.getFirstName() +" " + sourceAccountUser.getLastName() + " " + sourceAccountUser.getOtherName();
+
+        if (transferRequest.getAmount().compareTo(sourceAccountUser.getAccountBalance()) > 0){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.INSUFFICIENT_BALANCE_CODE)
+                    .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+       sourceAccountUser.setAccountBalance(sourceAccountUser.getAccountBalance().subtract(transferRequest.getAmount()));
+        userDao.save(sourceAccountUser);
+
+        EmailDetails debitAlert = EmailDetails.builder()
+                .subject("Debit alert")
+                .recipient(sourceAccountUser.getEmail())
+                .messageBody("The sum of " + transferRequest.getAmount() + "has been deducted from your account! Your current balance is " + sourceAccountUser.getAccountBalance())
+                .build();
+
+        emailService.sendEmailAlert(debitAlert);
+
+        User destinationUser = userDao.findByAccountNumber(transferRequest.getDestinationAccountNumber());
+        destinationUser.setAccountBalance(destinationUser.getAccountBalance().add(transferRequest.getAmount()));
+        //String recipientUsername = destinationUser.getFirstName() + " " + destinationUser.getLastName() + " " + destinationUser.getAddress();
+        userDao.save(destinationUser);
+
+        EmailDetails creditAlert = EmailDetails.builder()
+                .subject("Credit alert")
+                .recipient(sourceAccountUser.getEmail())
+                .messageBody("The amount of " + transferRequest.getAmount() + " has been add to your account! Your current balance is " + destinationUser.getAccountBalance())
+                .build();
+
+        emailService.sendEmailAlert(creditAlert);
+
+        //Save Transaction
+        TransactionDto transactionDto = TransactionDto.builder()
+                .accountNumber(destinationUser.getAccountNumber())
+                .transactionType("Credit")
+                .accountNumber(destinationUser.getAccountNumber())
+                .amount(transferRequest.getAmount())
+                .build();
+
+        transactionService.saveTransaction(transactionDto);
+
+        return BankResponse.builder()
+                .responseCode(AccountUtils.TRANSFER_SUCCESSFUL_CODE)
+                .responseMessage(AccountUtils.TRANSFER_SECCESSFUL_MESSAGE)
+                .accountInfo(AccountInfo.builder()
+                        .accountName(destinationUser.getFirstName() +" " + destinationUser.getLastName() + " " + destinationUser.getOtherName())
+                        .accountNumber(destinationUser.getAccountNumber())
+                        .accountBalance(destinationUser.getAccountBalance())
+                        .build())
+                .build();
+
+    }
+
     //balanceEnquiry, name Enquiry, credit, debit,transfer
+
+
+
 
 
 }
