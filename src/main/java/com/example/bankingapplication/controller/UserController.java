@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/user")
 @Tag(name = "User Management APIs")
 public class UserController {
     //testing git
@@ -32,6 +32,11 @@ public class UserController {
     @PostMapping("/create")
     public BankResponse createAccount(@RequestBody UserRequest userRequest){
         return userService.createAccount(userRequest);
+    }
+
+    @PostMapping("/login")
+    public BankResponse login(@RequestBody LoginDto loginDto){
+        return userService.login(loginDto);
     }
 
     @Operation(

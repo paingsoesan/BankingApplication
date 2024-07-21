@@ -13,7 +13,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="BankingApplication" options="-parameters" />
+      <module name="BankingApplication" options="-parameters --add-exports jdk.internal.le/jdk.internal.org.jline.keymap=ALL-UNNAMED" />
     </option>
   </component>
 </project>
